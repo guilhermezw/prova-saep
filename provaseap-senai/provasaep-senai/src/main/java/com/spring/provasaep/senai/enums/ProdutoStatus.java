@@ -11,7 +11,8 @@ public enum ProdutoStatus {
     MANUTENCAO("Manutenção"),
     DANIFICADO("Danificado"),
     BAIXADO("Baixado"),
-    ALERTA_ESTOQUE("Alerta Estoque");
+    ALERTA_ESTOQUE("Alerta Estoque"),
+    EXCLUIDO("Excluido");
 
     private final String value;
 

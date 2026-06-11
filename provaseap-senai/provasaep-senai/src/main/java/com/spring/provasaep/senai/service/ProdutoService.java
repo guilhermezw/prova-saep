@@ -7,6 +7,7 @@ import com.spring.provasaep.senai.enums.ProdutoTipo;
 import com.spring.provasaep.senai.enums.TipoAcao;
 import com.spring.provasaep.senai.exception.custom.ConflitoDeDadosException;
 import com.spring.provasaep.senai.exception.custom.RecursoNaoEncontradoException;
+import com.spring.provasaep.senai.exception.custom.RegraNegocioException;
 import com.spring.provasaep.senai.mapper.ProdutoMapper;
 import com.spring.provasaep.senai.model.ProdutoModel;
 import com.spring.provasaep.senai.repository.ProdutoRepository;
@@ -116,7 +117,12 @@ public class ProdutoService {
         ProdutoModel produtoParaDeletar = produtoRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Não é possível deletar. Equipamento não encontrado."));
 
-        produtoRepository.deleteById(id);
+        if(produtoParaDeletar.getStatus() == ProdutoStatus.EXCLUIDO){
+            throw new RegraNegocioException("Produto já excluido");
+        }
+
+        produtoParaDeletar.setStatus(ProdutoStatus.EXCLUIDO);
+        produtoRepository.save(produtoParaDeletar);
 
         // Registramos a exclusão passando o objeto que acabou de ser deletado
         historicoService.registrarAcao(produtoParaDeletar, TipoAcao.EXCLUSAO, "Registro Apagado", produtoParaDeletar.getNome(), "N/A");
