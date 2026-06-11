@@ -31,7 +31,7 @@ public class HistoricoService {
      * Este método deve ser chamado por outros services (ex: ProdutoService)
      * sempre que um cadastro for criado, atualizado ou excluído.
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void registrarAcao(ProdutoModel produto, TipoAcao tipoAcao, String campoAlterado, String valorAntigo, String valorNovo) {
 
         // Captura quem está fazendo a alteração no momento da requisição

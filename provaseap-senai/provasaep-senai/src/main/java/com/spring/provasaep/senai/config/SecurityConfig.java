@@ -60,7 +60,9 @@ public class SecurityConfig {
 
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/view/**").authenticated()
+                        .requestMatchers("/historico/**").authenticated()
+                        .requestMatchers("/produtos/**").authenticated()
+                        .requestMatchers("/movimentacoes/**").authenticated()
 
 
                         .anyRequest().authenticated()
