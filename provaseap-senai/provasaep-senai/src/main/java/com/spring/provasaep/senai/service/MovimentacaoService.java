@@ -66,6 +66,7 @@ public class MovimentacaoService {
         MovimentacaoModel movimentacao = new MovimentacaoModel();
         movimentacao.setTipoMovimentacao(dto.getTipoMovimentacao());
         movimentacao.setQuantidade(dto.getQuantidade());
+        movimentacao.setDataMovimentacao(dto.getDataMovimentacao());
         movimentacao.setMotivo(dto.getMotivo());
 
         // Vincula as entidades mapeadas e validadas ao histórico

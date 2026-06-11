@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ferramentei — Auditoria</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+
+<script type="module">
+  import { requireAuth, renderShell } from '../js/layout.js';
+  import { Historico } from '../js/api.js';
+  import { toast, histBadge, fmtDate, renderPagination, icons } from '../js/utils.js';
+
+  if (!requireAuth()) throw new Error('not logged in');
+
+  const main = renderShell('historico');
+
+  main.innerHTML = `
+    <div class="topbar">
+      <h1>Auditoria do Sistema</h1>
+    </div>
+    <div class="page-content">
+      <div class="card">
+        <div style="margin-bottom:1rem;color:var(--text-soft);font-size:.83rem;display:flex;align-items:center;gap:.5rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Registro somente-leitura de criações, edições e exclusões de equipamentos.
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Data / Hora</th>
+                <th>Ação</th>
+                <th>Produto</th>
+                <th>Campo</th>
+                <th>Valor Anterior</th>
+                <th>Valor Novo</th>
+                <th>Usuário</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-body">
+              <tr class="loading-row"><td colspan="7"><span class="spinner"></span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+  `;
+
+  let currentPage = 0;
+
+  async function load(page = 0) {
+    currentPage = page;
+    document.getElementById('tabela-body').innerHTML =
+      `<tr class="loading-row"><td colspan="7"><span class="spinner"></span></td></tr>`;
+    try {
+      const data = await Historico.listar(page, 15);
+      const list = data.content || [];
+      renderTabela(list);
+      renderPagination(
+        document.getElementById('pagination'),
+        data.page?.number ?? page,
+        data.page?.totalPages ?? 1,
+        load
+      );
+    } catch (e) {
+      toast(e.message, 'error');
+      document.getElementById('tabela-body').innerHTML =
+        `<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--danger)">${e.message}</td></tr>`;
+    }
+  }
+
+  function val(v) {
+    if (!v) return '<span style="color:var(--muted)">—</span>';
+    return `<span class="td-mono" style="font-size:.78rem">${v}</span>`;
+  }
+
+  function renderTabela(list) {
+    const tbody = document.getElementById('tabela-body');
+    if (!list.length) {
+      tbody.innerHTML = `<tr><td colspan="7">
+        <div class="empty-state">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+          <p>Nenhum registro de auditoria encontrado</p>
+        </div>
+      </td></tr>`;
+      return;
+    }
+    tbody.innerHTML = list.map(h => `
+      <tr>
+        <td class="td-mono" style="white-space:nowrap">${fmtDate(h.dataAcao)}</td>
+        <td>${histBadge(h.tipoAcao)}</td>
+        <td style="font-weight:500">${h.produto?.nome || '—'}</td>
+        <td class="td-mono" style="font-size:.8rem">${h.campoAlterado || '—'}</td>
+        <td>${val(h.valorAntigo)}</td>
+        <td>${val(h.valorNovo)}</td>
+        <td>${h.usuario?.nome || '—'}</td>
+      </tr>
+    `).join('');
+  }
+
+  load();
+</script>
+</body>
+</html>

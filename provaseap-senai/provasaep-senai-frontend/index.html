@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ferramentei — Dashboard</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<script type="module">
+  import { requireAuth, renderShell } from './js/layout.js';
+  import { Produtos, Movimentacoes } from './js/api.js';
+  import { toast, statusBadge, movBadge, fmtDate, icons } from './js/utils.js';
+
+  if (!requireAuth()) throw new Error('not logged in');
+
+  const main = renderShell('dashboard');
+
+  main.innerHTML = `
+    <div class="topbar">
+      <h1>Dashboard</h1>
+    </div>
+    <div class="page-content">
+      <!-- Stats -->
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon orange">${icons.tools}</div>
+          <div>
+            <div class="stat-value" id="stat-total">—</div>
+            <div class="stat-label">Total de Equipamentos</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">${icons.package}</div>
+          <div>
+            <div class="stat-value" id="stat-disponivel">—</div>
+            <div class="stat-label">Disponíveis</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon yellow">${icons.alertTri}</div>
+          <div>
+            <div class="stat-value" id="stat-alerta">—</div>
+            <div class="stat-label">Em Alerta / Manutenção</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue">${icons.activity}</div>
+          <div>
+            <div class="stat-value" id="stat-movs">—</div>
+            <div class="stat-label">Movimentações Recentes</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Two columns -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;" id="dash-cols">
+        <!-- Recent Produtos -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Equipamentos Recentes</span>
+            <a href="pages/produtos.html" class="btn btn-ghost btn-sm">Ver todos</a>
+          </div>
+          <div id="recent-produtos">
+            <div style="text-align:center;padding:1.5rem"><span class="spinner"></span></div>
+          </div>
+        </div>
+
+        <!-- Recent Movimentações -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Últimas Movimentações</span>
+            <a href="pages/movimentacoes.html" class="btn btn-ghost btn-sm">Ver todas</a>
+          </div>
+          <div id="recent-movs">
+            <div style="text-align:center;padding:1.5rem"><span class="spinner"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // ── Responsive dash cols ──
+  function checkCols() {
+    const cols = document.getElementById('dash-cols');
+    if (window.innerWidth < 900) cols.style.gridTemplateColumns = '1fr';
+    else cols.style.gridTemplateColumns = '1fr 1fr';
+  }
+  checkCols();
+  window.addEventListener('resize', checkCols);
+
+  async function loadDashboard() {
+    try {
+      const [prodData, movData] = await Promise.all([
+        Produtos.listar(0, 5),
+        Movimentacoes.listar(0, 5),
+      ]);
+
+      const prods = prodData.content || [];
+      const movs  = movData.content || [];
+      const total = prodData.page?.totalElements ?? prods.length;
+
+      // Stats
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-disponivel').textContent =
+        prods.filter(p => p.status === 'Disponivel').length + (total > 5 ? '+' : '');
+      document.getElementById('stat-alerta').textContent =
+        prods.filter(p => ['Alerta Estoque','Manutenção','Danificado'].includes(p.status)).length;
+      document.getElementById('stat-movs').textContent = movData.page?.totalElements ?? movs.length;
+
+      // Recent produtos
+      const rpEl = document.getElementById('recent-produtos');
+      if (!prods.length) {
+        rpEl.innerHTML = `<div class="empty-state"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg><p>Nenhum equipamento</p></div>`;
+      } else {
+        rpEl.innerHTML = prods.map(p => `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid var(--border);">
+            <div>
+              <div style="font-size:.88rem;font-weight:500">${p.nome}</div>
+              <div style="font-size:.75rem;color:var(--muted);font-family:'JetBrains Mono',monospace">${p.codigoPatrimonio}</div>
+            </div>
+            ${statusBadge(p.status)}
+          </div>
+        `).join('') + `<div style="padding:.5rem 0"></div>`;
+      }
+
+      // Recent movimentos
+      const rmEl = document.getElementById('recent-movs');
+      if (!movs.length) {
+        rmEl.innerHTML = `<div class="empty-state"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><p>Nenhuma movimentação</p></div>`;
+      } else {
+        rmEl.innerHTML = movs.map(m => `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid var(--border);">
+            <div>
+              <div style="font-size:.88rem;font-weight:500">${m.produto?.nome || '—'}</div>
+              <div style="font-size:.75rem;color:var(--muted)">${fmtDate(m.dataMovimentacao)}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:.5rem">
+              ${movBadge(m.tipoMovimentacao)}
+              <span style="font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--text-soft)">${m.quantidade}</span>
+            </div>
+          </div>
+        `).join('') + `<div style="padding:.5rem 0"></div>`;
+      }
+
+    } catch (e) {
+      toast('Erro ao carregar dashboard: ' + e.message, 'error');
+    }
+  }
+
+  loadDashboard();
+</script>
+</body>
+</html>
