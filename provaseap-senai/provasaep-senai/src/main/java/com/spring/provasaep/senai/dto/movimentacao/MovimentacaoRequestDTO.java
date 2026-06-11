@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.time.LocalDateTime;
+
 public class MovimentacaoRequestDTO {
 
     @NotNull(message = "O ID do produto é obrigatório.")
@@ -19,11 +21,15 @@ public class MovimentacaoRequestDTO {
     @Size(max = 255, message = "A justificativa/motivo não pode ultrapassar 255 caracteres.")
     private String motivo;
 
-    public MovimentacaoRequestDTO(Long produtoId, TipoMovimentacao tipoMovimentacao, int quantidade, String motivo) {
+    @NotNull(message = "A data movimentação é obrigatória.")
+    private LocalDateTime dataMovimentacao;
+
+    public MovimentacaoRequestDTO(Long produtoId, TipoMovimentacao tipoMovimentacao, int quantidade, String motivo, LocalDateTime dataMovimentacao) {
         this.produtoId = produtoId;
         this.tipoMovimentacao = tipoMovimentacao;
         this.quantidade = quantidade;
         this.motivo = motivo;
+        this.dataMovimentacao = dataMovimentacao;
     }
 
     public Long getProdutoId() {
@@ -56,5 +62,13 @@ public class MovimentacaoRequestDTO {
 
     public void setMotivo(String motivo) {
         this.motivo = motivo;
+    }
+
+    public LocalDateTime getDataMovimentacao() {
+        return dataMovimentacao;
+    }
+
+    public void setDataMovimentacao(LocalDateTime dataMovimentacao) {
+        this.dataMovimentacao = dataMovimentacao;
     }
 }
