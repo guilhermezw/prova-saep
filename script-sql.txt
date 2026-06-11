@@ -1,0 +1,111 @@
+-- ============================================================
+--  saep_db — Script de criação e população
+--  Usuários NÃO são populados aqui — o cadastro é feito
+--  pela aplicação. Após cadastrar ao menos um usuário,
+--  consulte os UUIDs com:
+--    SELECT id, nome FROM usuario;
+--  e substitua as variáveis abaixo antes de rodar os INSERTs
+--  de movimentacoes e historico_auditoria.
+-- ============================================================
+
+CREATE DATABASE IF NOT EXISTS saep_db
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+USE saep_db;
+
+-- ============================================================
+--  TABELAS
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS usuario (
+  id       CHAR(36)     NOT NULL DEFAULT (UUID()),
+  nome     VARCHAR(255) NOT NULL,
+  email    VARCHAR(255) NOT NULL UNIQUE,
+  senha    VARCHAR(255) NOT NULL,
+  role     VARCHAR(50)  NOT NULL,
+  ativo    TINYINT(1)   NOT NULL DEFAULT 1,
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS equipamentos (
+  id                 BIGINT       NOT NULL AUTO_INCREMENT,
+  nome               VARCHAR(100) NOT NULL,
+  tipo               VARCHAR(50)  NOT NULL,
+  codigo_patrimonio  VARCHAR(255) NOT NULL UNIQUE,
+  descricao          TEXT,
+  status             VARCHAR(50)  NOT NULL,
+  quantidade         INT          NOT NULL,
+  quantidade_minima  INT          NOT NULL,
+  data_registro      DATETIME,
+  observacoes        VARCHAR(255),
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS movimentacoes (
+  id                  BIGINT      NOT NULL AUTO_INCREMENT,
+  produto_id          BIGINT      NOT NULL,
+  usuario_id          CHAR(36)    NOT NULL,
+  tipo_movimentacao   VARCHAR(50) NOT NULL,
+  quantidade          INT         NOT NULL,
+  data_movimentacao   DATETIME    NOT NULL,
+  motivo              TEXT,
+  PRIMARY KEY (id),
+  CONSTRAINT fk_mov_produto FOREIGN KEY (produto_id) REFERENCES equipamentos (id),
+  CONSTRAINT fk_mov_usuario FOREIGN KEY (usuario_id) REFERENCES usuario (id)
+);
+
+CREATE TABLE IF NOT EXISTS historico_auditoria (
+  id              BIGINT       NOT NULL AUTO_INCREMENT,
+  produto_id      BIGINT,
+  usuario_id      CHAR(36)     NOT NULL,
+  tipo_acao       VARCHAR(50)  NOT NULL,
+  campo_alterado  VARCHAR(255) NOT NULL,
+  valor_antigo    TEXT,
+  valor_novo      TEXT,
+  data_acao       DATETIME     NOT NULL,
+  PRIMARY KEY (id),
+  CONSTRAINT fk_hist_produto FOREIGN KEY (produto_id) REFERENCES equipamentos (id),
+  CONSTRAINT fk_hist_usuario FOREIGN KEY (usuario_id) REFERENCES usuario (id)
+);
+
+-- ============================================================
+--  EQUIPAMENTOS
+--  tipo   → ProdutoTipo.getValue():
+--           Manual | Elétrico | Pneumático | Medição | EPI | Consumível
+--  status → ProdutoStatus.getValue():
+--           Disponivel | Emprestado | Manutenção | Danificado |
+--           Baixado | Alerta Estoque | Excluido
+-- ============================================================
+
+INSERT INTO equipamentos (nome, tipo, codigo_patrimonio, descricao, status, quantidade, quantidade_minima, data_registro, observacoes) VALUES
+  ('Furadeira Bosch GSB',      'Elétrico',   'PAT-2024-001', 'Furadeira de impacto 650 W',                'Disponivel',     5, 1, NOW(), NULL),
+  ('Chave de Torque 3/4"',     'Manual',     'PAT-2024-002', 'Chave de torque 40–200 Nm',                 'Disponivel',     8, 2, NOW(), NULL),
+  ('Parafusadeira Pneumática', 'Pneumático', 'PAT-2024-003', 'Parafusadeira de impacto 1/2" 700 Nm',      'Manutenção',     2, 1, NOW(), 'Manutenção preventiva agendada'),
+  ('Paquímetro Digital 150mm', 'Medição',    'PAT-2024-004', 'Paquímetro digital 0–150 mm resolução 0,01','Disponivel',     6, 2, NOW(), NULL),
+  ('Capacete de Segurança',    'EPI',        'PAT-2024-005', 'Capacete classe B com jugular',             'Alerta Estoque', 3, 5, NOW(), 'Estoque abaixo do mínimo'),
+  ('Disco de Corte 7"',        'Consumível', 'PAT-2024-006', 'Disco de corte para aço inox 180 mm',       'Disponivel',    20, 5, NOW(), NULL);
+
+-- ============================================================
+--  Após cadastrar os usuários pela aplicação, substitua
+--  os valores abaixo pelos UUIDs reais e descomente os INSERTs.
+--
+--  SET @usuario1 = 'uuid-do-primeiro-usuario';
+--  SET @usuario2 = 'uuid-do-segundo-usuario';
+-- ============================================================
+
+-- INSERT INTO movimentacoes (produto_id, usuario_id, tipo_movimentacao, quantidade, data_movimentacao, motivo) VALUES
+--   (1, @usuario1, 'Entrada',    3, NOW() - INTERVAL 10 DAY, 'Compra — NF 4521'),
+--   (1, @usuario1, 'Saida',      1, NOW() - INTERVAL 7  DAY, 'Empréstimo para setor de manutenção'),
+--   (3, @usuario2, 'Manutenção', 1, NOW() - INTERVAL 5  DAY, 'Falha no gatilho identificada'),
+--   (5, @usuario1, 'Entrada',    3, NOW() - INTERVAL 3  DAY, 'Compra emergencial — NF 4598'),
+--   (6, @usuario2, 'Saida',      5, NOW() - INTERVAL 1  DAY, 'Uso em obra bloco C'),
+--   (4, @usuario1, 'Entrada',    2, NOW(),                   'Compra — NF 4601');
+
+-- INSERT INTO historico_auditoria (produto_id, usuario_id, tipo_acao, campo_alterado, valor_antigo, valor_novo, data_acao) VALUES
+--   (1,    @usuario1, 'Inserção',  'registro',  NULL,          'Furadeira Bosch GSB',       NOW() - INTERVAL 10 DAY),
+--   (1,    @usuario1, 'Alteração', 'quantidade','2',           '5',                         NOW() - INTERVAL 7  DAY),
+--   (3,    @usuario2, 'Alteração', 'status',    'Disponivel',  'Manutenção',                NOW() - INTERVAL 5  DAY),
+--   (5,    @usuario1, 'Alteração', 'status',    'Disponivel',  'Alerta Estoque',            NOW() - INTERVAL 3  DAY),
+--   (6,    @usuario2, 'Alteração', 'quantidade','25',          '20',                        NOW() - INTERVAL 1  DAY),
+--   (NULL, @usuario1, 'Inserção',  'usuario',   NULL,          'Novo usuário cadastrado',   NOW() - INTERVAL 2  DAY);
