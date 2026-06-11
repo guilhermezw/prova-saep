@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-06-10T20:48:24-0300",
+    date = "2026-06-10T21:06:33-0300",
     comments = "version: 1.6.3, compiler: javac, environment: Java 25.0.3 (Microsoft)"
 )
 @Component
@@ -21,6 +21,7 @@ public class ProdutoMapperImpl implements ProdutoMapper {
             return null;
         }
 
+        Long id = null;
         String nome = null;
         ProdutoTipo tipo = null;
         String codigoPatrimonio = null;
@@ -30,6 +31,7 @@ public class ProdutoMapperImpl implements ProdutoMapper {
         int quantidadeMinima = 0;
         String observacoes = null;
 
+        id = produto.getId();
         nome = produto.getNome();
         tipo = produto.getTipo();
         codigoPatrimonio = produto.getCodigoPatrimonio();
@@ -39,7 +41,7 @@ public class ProdutoMapperImpl implements ProdutoMapper {
         quantidadeMinima = produto.getQuantidadeMinima();
         observacoes = produto.getObservacoes();
 
-        ProdutoResponseDTO produtoResponseDTO = new ProdutoResponseDTO( nome, tipo, codigoPatrimonio, descricao, status, quantidade, quantidadeMinima, observacoes );
+        ProdutoResponseDTO produtoResponseDTO = new ProdutoResponseDTO( id, nome, tipo, codigoPatrimonio, descricao, status, quantidade, quantidadeMinima, observacoes );
 
         return produtoResponseDTO;
     }

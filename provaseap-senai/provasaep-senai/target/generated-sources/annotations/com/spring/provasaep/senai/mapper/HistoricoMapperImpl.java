@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-06-10T20:48:24-0300",
+    date = "2026-06-10T21:06:33-0300",
     comments = "version: 1.6.3, compiler: javac, environment: Java 25.0.3 (Microsoft)"
 )
 @Component
@@ -57,6 +57,7 @@ public class HistoricoMapperImpl implements HistoricoMapper {
             return null;
         }
 
+        Long id = null;
         String nome = null;
         ProdutoTipo tipo = null;
         String codigoPatrimonio = null;
@@ -66,6 +67,7 @@ public class HistoricoMapperImpl implements HistoricoMapper {
         int quantidadeMinima = 0;
         String observacoes = null;
 
+        id = produtoModel.getId();
         nome = produtoModel.getNome();
         tipo = produtoModel.getTipo();
         codigoPatrimonio = produtoModel.getCodigoPatrimonio();
@@ -75,7 +77,7 @@ public class HistoricoMapperImpl implements HistoricoMapper {
         quantidadeMinima = produtoModel.getQuantidadeMinima();
         observacoes = produtoModel.getObservacoes();
 
-        ProdutoResponseDTO produtoResponseDTO = new ProdutoResponseDTO( nome, tipo, codigoPatrimonio, descricao, status, quantidade, quantidadeMinima, observacoes );
+        ProdutoResponseDTO produtoResponseDTO = new ProdutoResponseDTO( id, nome, tipo, codigoPatrimonio, descricao, status, quantidade, quantidadeMinima, observacoes );
 
         return produtoResponseDTO;
     }

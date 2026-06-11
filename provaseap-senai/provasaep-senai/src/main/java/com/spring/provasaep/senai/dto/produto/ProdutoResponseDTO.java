@@ -6,6 +6,7 @@ import com.spring.provasaep.senai.enums.ProdutoTipo;
 
 public class ProdutoResponseDTO {
 
+    private Long id;
     private String nome;
     private ProdutoTipo tipo;
     private String codigoPatrimonio;
@@ -15,7 +16,8 @@ public class ProdutoResponseDTO {
     private int quantidadeMinima;
     private String observacoes;
 
-    public ProdutoResponseDTO(String nome, ProdutoTipo tipo, String codigoPatrimonio, String descricao, ProdutoStatus status, int quantidade, int quantidadeMinima, String observacoes) {
+    public ProdutoResponseDTO(Long id, String nome, ProdutoTipo tipo, String codigoPatrimonio, String descricao, ProdutoStatus status, int quantidade, int quantidadeMinima, String observacoes) {
+        this.id = id;
         this.nome = nome;
         this.tipo = tipo;
         this.codigoPatrimonio = codigoPatrimonio;
@@ -24,6 +26,14 @@ public class ProdutoResponseDTO {
         this.quantidade = quantidade;
         this.quantidadeMinima = quantidadeMinima;
         this.observacoes = observacoes;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getNome() {
